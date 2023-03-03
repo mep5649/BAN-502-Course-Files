@@ -1,0 +1,86 @@
+---
+title: "Module3_Assignment1"
+author: "M.Jackson"
+date: "2023-02-06"
+output: html_document
+---
+
+```{r}
+library("tidyverse")
+library("lubridate")
+library("tidymodels")
+```
+
+```{r}
+library(readr)
+bike <- read_csv("bike_cleaned.csv")
+```
+
+Before beginning the assignment tasks, read-in the “bike_cleaned.csv” file into a data frame called “bike”. This is the same data that you used in the Module 2 Multiple Linear Regression and Special Issues assignment. As we did in that assignment you should convert “dteday” from a character variable to a date variable. Convert the remaining character variables to factors. You can do this one variable at a time or use a “mutate_if”.
+Finally, convert the “hr” variable into a factor. 
+
+```{r}
+bike = bike %>% mutate(dteday = mdy(dteday))
+bike = bike %>% mutate_if(is.character, as_factor)
+bike = bike %>% mutate(across(c(5),factor))
+#df <- df %>% mutate(across(c(4,5,7),factor))
+```
+
+Question 1: Split the data into training and testing sets. Your training set should have 70% of the data. Use a random number (set.seed) of 1234. Your split should be stratified by the “count” variable. How many rows of data are in the training set? I know it’s probably a bit annoying to keep answering this question about the number of rows, but it’s helpful to be able to validate that your split code is correct before proceeding :)
+
+```{r}
+set.seed(1234)
+bike_split = initial_split(bike, prop = 0.70, strata = count)
+train = training(bike_split)
+test = testing(bike_split)
+```
+
+Question 3: Build a linear regression model (using the training set) to predict “count” using the variables “season”, “mnth”, “hr”, “holiday”, and “weekday”, “temp”, and “weathersit”.
+What is the adjusted R-squared value (to four digits) of the resulting model?
+
+```{r}
+bike_recipe = recipe(count ~ season + mnth + hr + holiday + weekday + temp + weathersit, train)
+
+lm_model = #give the model type a name 
+  linear_reg() %>% #specify that we are doing linear regression
+  set_engine("lm") #specify the specify type of linear tool we want to use 
+
+lm_wflow = 
+  workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(bike_recipe)
+
+lm_fit = fit(lm_wflow, train)
+```
+
+```{r}
+summary(lm_fit$fit$fit$fit)
+```
+
+Question 4: Use the predict functions to make predictions (using your model from Question 3) on the training set. Hint: Be sure to store the predictions in an object, perhaps named “predict_train” or similar. Develop a histogram of the predictions (Hint: The predictions are likely stored in a variable called “.pred” in your predictions object).
+
+```{r}
+lm_fit %>% predict(test) %>% bind_cols(test) %>% metrics(truth = count, estimate = .pred)
+```
+```{r}
+ggplot(lm_fit, aes(hours,count) + geom_histogram)
+```
+
+```{r}
+bike_recipe = recipe(count ~ season + mnth + hr + holiday + weekday + temp + weathersit, train)
+
+lm_model = #give the model type a name 
+  linear_reg() %>% #specify that we are doing linear regression
+  set_engine("lm") #specify the specify type of linear tool we want to use 
+
+lm_wflow = 
+  workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(bike_recipe)
+
+lm_fit = fit(lm_wflow, train)
+```
+
+```{r}
+summary(lm_fit$fit$fit$fit)
+```
